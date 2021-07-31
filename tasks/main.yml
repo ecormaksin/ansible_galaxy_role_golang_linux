@@ -1,0 +1,71 @@
+---
+# tasks file for ansible_galaxy_role_golang_linux
+
+- name: "Golang | download installer"
+  become: yes
+  ignore_errors: "{{ ansible_check_mode }}"
+  get_url:
+    url: "{{ go.tarball.file.url }}/{{ go.tarball.file.name }}"
+    dest: "{{ go.tarball.file.dest }}/{{ go.tarball.file.name }}"
+
+- name: "Golang | check installer downloaded"
+  become: yes
+  ignore_errors: yes
+  stat:
+    path: "{{ go.tarball.file.dest }}/{{ go.tarball.file.name }}"
+  register: go_tarball_dest_path
+
+- block:
+
+  - name: "Golang | remove installed golang"
+    become: yes
+    ignore_errors: yes
+    file:
+      name: /usr/local/go
+      state: absent
+
+  - name: "Golang | expand installer"
+    become: yes
+    ignore_errors: "{{ ansible_check_mode }}"
+    unarchive:
+      remote_src: yes
+      src: "{{ go.tarball.file.dest }}/{{ go.tarball.file.name }}"
+      dest: /usr/local
+
+  - name: "Golang | copy add-path script"
+    become: yes
+    ignore_errors: "{{ ansible_check_mode }}"
+    copy:
+      src: add_path_golang_bin
+      dest: /etc/add_path_golang_bin
+
+  - name: "Golang | load add-path script"
+    ignore_errors: "{{ ansible_check_mode }}"
+    shell:
+      cmd: |
+        cat $HOME/.bashrc | grep "/etc/add_path_golang_bin" >/dev/null
+        if [ $? -eq 0 ]; then
+          echo "already changed."
+        else
+          echo ". /etc/add_path_golang_bin" >> $HOME/.bashrc
+        fi
+
+  when: go_tarball_dest_path.stat.exists
+
+- name: "Golang | copy add-package-path script"
+  become: yes
+  ignore_errors: "{{ ansible_check_mode }}"
+  copy:
+    src: add_path_golang_pkg
+    dest: /etc/add_path_golang_pkg
+
+- name: "Golang | load add-package-path script"
+  ignore_errors: "{{ ansible_check_mode }}"
+  shell:
+    cmd: |
+      cat $HOME/.bashrc | grep "/etc/add_path_golang_pkg" >/dev/null
+      if [ $? -eq 0 ]; then
+        echo "already changed."
+      else
+        echo ". /etc/add_path_golang_pkg" >> $HOME/.bashrc
+      fi

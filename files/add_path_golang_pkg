@@ -1,0 +1,5 @@
+GOLANG_PKG_PATH=$HOME/go/bin
+echo $PATH | grep $GOLANG_PKG_PATH >/dev/null
+if [ $? -ne 0 ]; then
+  export PATH=$GOLANG_PKG_PATH:$PATH
+fi

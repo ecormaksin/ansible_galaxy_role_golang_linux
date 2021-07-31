@@ -1,0 +1,5 @@
+GOLANG_BIN_PATH=/usr/local/go/bin
+echo $PATH | grep $GOLANG_BIN_PATH >/dev/null
+if [ $? -ne 0 ]; then
+  export PATH=$GOLANG_BIN_PATH:$PATH
+fi
